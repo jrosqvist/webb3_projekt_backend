@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+    <title>Admin-gränssnitt</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+
+<body>
+
+    <!--Utbildning-->
+    <form id="addEducationForm">
+        <input type="text" id="hie" placeholder="Lärosäte" required /><br />
+        <input type="text" id="name" placeholder="Namn på kurs/program" required /><br />
+        <input type="text" id="credits" placeholder="Antal högskolepoäng" required /><br />
+        <input type="text" id="startdate" placeholder="Startdatum" required /></br>
+        <input type="text" id="enddate" placeholder="Slutdatum" required /></br>
+        <button onclick="addEducation()">Lägg till utbildning</button>
+    </form>
+
+    <!--Utskrifter för utbildning-->
+    <div id="output"></div>
+
+    <!--Jobb-->
+    <form id="addJobForm">
+        <input type="text" id="workplace" placeholder="Arbetsplats" required /><br />
+        <input type="text" id="title" placeholder="Arbetstitel" required /><br />
+        <input type="text" id="startdatejob" placeholder="Startdatum" required /></br>
+        <input type="text" id="enddatejob" placeholder="Slutdatum" required /></br>
+        <button onclick="addJob()">Lägg till jobb</button>
+    </form>
+
+    <!--Utskrifter för jobb-->
+    <div id="outputjobs"></div>
+
+       <!--Skapade webbplatser-->
+    <form id="addWebpageForm">
+        <input type="text" id="webpagetitle" placeholder="Titel" required /><br />
+        <input type="text" id="webpageurl" placeholder="Url till webbplatsen" required /><br />
+        <input type="text" id="webpagedescription" placeholder="Beskrivning av webbplatsen" required /></br>
+        <button onclick="addWebpage()">Lägg till webbplats</button>
+    </form>
+
+        <!--Utskrifter för skapade webbplatser-->
+    <div id="outputwebpages"></div>
+
+    <script>
+        "use strict";
+        // Hämtar utbildningar, jobben och webbplatserna när sidan laddas in
+        window.onload = function () {
+            getWebpages();
+            getJobs();
+            getEducation();
+        }
+
+
+        //WEBBPLATSER
+
+        // Lägger webbtjänst-adressen i en variabel
+        //const WEBPAGEURL = "http://localhost/projekt_w3_backend/webpagelist.php/webpages/";
+        const WEBPAGEURL = "https://studenter.miun.se/~joro1803/dt173g/projekt/backend/webpagelist.php/webpages/";
+
+        // Funktion som lägger till en webbplats från formuläret
+        function addWebpage() {
+            // Hämtar datat från fälten och lägger i variabler
+            let webpagetitle = document.getElementById("webpagetitle").value;
+            let webpageurl = document.getElementById("webpageurl").value;
+            let webpagedescription = document.getElementById("webpagedescription").value;
+
+            // Skapar ett JSON-objekt av inmatat data
+            let webpageJson = JSON.stringify({
+                "title": webpagetitle,
+                "url": webpageurl,
+                "description": webpagedescription
+            });
+            // Skickar JSON-datat till URL:en
+            fetch(WEBPAGEURL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: webpageJson
+            })
+                // Konverterar returnerad respons till JSON
+                .then((res) => res.json())
+                // Hämtar webbplatserna
+                .then((data) => getWebpages())
+                // Plockar upp felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+
+        // Funktion som hämtar webbplatserna från webbtjänsten
+        function getWebpages() {
+            // Håmtar jobb från URL:en
+            fetch(WEBPAGEURL)
+                // Konverterar till JSON
+                .then((res) => res.json())
+                .then((data) => {
+                    let outputwebpages = "<h3>Skapade webbplatser</h3>";
+                    // Loopar igenom datat och skriver ut alla kurser
+                    data.forEach(function (post) {
+                        outputwebpages += "<div class = 'webpageBox'><p>"
+                            + "<p>" + post.title + "</p>"
+                            + "<p>" + post.url + "</p>"
+                            + "<p>" + post.description + "</p>"
+                            // Lägger till en radera-knapp som får ID:t från webbplats-ID:t
+                            + "<button onclick ='deleteWebpage(this.id)' id =" + post.id + ">Radera</button></div>";
+                    })
+                    // Lägger in all text i den rätta diven
+                    document.getElementById("outputwebpages").innerHTML = outputwebpages;
+                })
+                // Plockar upp felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+
+        // Funktion som tar bort en webbplats med ID:t som skickas från radera-knappen
+        function deleteWebpage(id) {
+            // Använder URL:en och lägger till id:t som ska raderas
+            fetch(WEBPAGEURL + id + "/", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                // Uppdaterar webbplatserna
+                .then((data) => getWebpages())
+                // Visar felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+
+
+
+
+        // JOBB
+
+        // Lägger webbtjänst-adressen i en variabel
+        //const JOBURL = "http://localhost/projekt_w3_backend/joblist.php/jobs/";
+        const JOBURL = "https://studenter.miun.se/~joro1803/dt173g/projekt/backend/joblist.php/jobs/";
+
+        // Funktion som lägger till ett jobb från formuläret
+        function addJob() {
+            // Hämtar datat från fälten och lägger i variabler
+            let workplace = document.getElementById("workplace").value;
+            let title = document.getElementById("title").value;
+            let startdatejob = document.getElementById("startdatejob").value;
+            let enddatejob = document.getElementById("enddatejob").value;
+
+            // Skapar ett JSON-objekt av inmatat data
+            let jobJson = JSON.stringify({
+                "workplace": workplace,
+                "title": title,
+                "startdate": startdatejob,
+                "enddate": enddatejob
+            });
+            // Skickar JSON-datat till URL:en
+            fetch(JOBURL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: jobJson
+            })
+                // Konverterar returnerad respons till JSON
+                .then((res) => res.json())
+                // Hämtar jobben
+                .then((data) => getJobs())
+                // Plockar upp felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+
+        // Funktion som hämtar jobben från webbtjänsten
+        function getJobs() {
+            // Håmtar jobb från URL:en
+            fetch(JOBURL)
+                // Konverterar till JSON
+                .then((res) => res.json())
+                .then((data) => {
+                    let outputjobs = "<h3>Arbetslivserfarenhet</h3>";
+                    // Loopar igenom datat och skriver ut alla kurser
+                    data.forEach(function (post) {
+                        outputjobs += "<div class = 'jobBox'><p>" + post.workplace + "</p>"
+                            + "<p>" + post.title + "</p>"
+                            + "<p>" + post.startdate + "</p>"
+                            + "<p>" + post.enddate + "</p>"
+                            // Lägger till en radera-knapp som får ID:t från kurs-ID:t
+                            + "<button onclick ='deleteJob(this.id)' id =" + post.id + ">Radera</button></div>";
+                    })
+                    // Lägger in all text i diven outputjobs
+                    document.getElementById("outputjobs").innerHTML = outputjobs;
+                })
+                // Plockar upp felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+
+        // Funktion som tar bort ett jobb med ID:t som skickas från radera-knappen
+        function deleteJob(id) {
+            // Använder URL:en och lägger till id:t som ska raderas
+            fetch(JOBURL + id + "/", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                // Uppdaterar jobblistan
+                .then((data) => getJobs())
+                // Visar felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+
+
+
+
+        // UTBILDNING
+
+        // Lägger webbtjänst-adressen i en variabel
+        //const URL = "http://localhost/projekt_w3_backend/educationlist.php/education/";
+        const URL = "https://studenter.miun.se/~joro1803/dt173g/projekt/backend/educationlist.php/education/";
+
+        // Funktion som lägger till en utbildning från formuläret
+        function addEducation() {
+            // Hämtar datat från fälten och lägger i variabler
+            let hie = document.getElementById("hie").value;
+            let name = document.getElementById("name").value;
+            let credits = document.getElementById("credits").value;
+            let startdate = document.getElementById("startdate").value;
+            let enddate = document.getElementById("enddate").value;
+
+            // Skapar ett JSON-objekt av inmatat data
+            let eduJson = JSON.stringify({
+                "hie": hie,
+                "name": name,
+                "credits": credits,
+                "startdate": startdate,
+                "enddate": enddate
+            });
+            // Skickar JSON-datat till URL:en
+            fetch(URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: eduJson
+            })
+                // Konverterar returnerad respons till JSON
+                .then((res) => res.json())
+                // Hämtar kurserna
+                .then((data) => getEducation())
+                // Plockar upp felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+
+        // Funktion som hämtar utbildningsposterna från webbtjänsten
+        function getEducation() {
+            // Håmtar kurser från URL:en
+            fetch(URL)
+                // Konverterar till JSON
+                .then((res) => res.json())
+                .then((data) => {
+                    let output = "<h3>Slutförd utbildning</h3>";
+                    // Loopar igenom datat och skriver ut alla poster
+                    data.forEach(function (post) {
+                        output += "<div class = 'courseBox'><p>" + post.hie + "</p>"
+                            + "<p>" + post.name + "</p>"
+                            + "<p>" + post.credits + "</p>"
+                            + "<p>" + post.startdate + "</p>"
+                            + "<p>" + post.enddate + "</p>"
+                            // Lägger till en radera-knapp som får ID:t från kurs-ID:t
+                            + "<button onclick ='deleteEducation(this.id)' id =" + post.id + ">Radera</button></div>";
+                    })
+                    // Lägger in all text i diven output
+                    document.getElementById("output").innerHTML = output;
+                })
+                // Plockar upp felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+
+        // Funktion som tar bort en utbildning med ID:t som skickas från radera-knappen
+        function deleteEducation(id) {
+            // Använder URL:en och lägger till id:t som ska raderas
+            fetch(URL + "/" + id + "/", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                // Uppdaterar lisstan med utbildningar
+                .then((data) => getEducation())
+                // Visar felmeddelanden
+                .catch((err) => console.log(err))
+        }
+
+    </script>
+</body>
+
+</html>
